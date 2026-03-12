@@ -26,13 +26,15 @@ _SCOPE = "499b84ac-1321-427f-aa17-267ca6975798/.default offline_access"
 _AUTH_URL = "https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize"
 _TOKEN_URL = "https://login.microsoftonline.com/organizations/oauth2/v2.0/token"
 
-_LOG_PREFIX = "[devops-keyring]"
+_LOG_PREFIX = "[ado-keyring]"
+_HTTP_TIMEOUT = 30  # seconds for all HTTP requests
+_CALLBACK_TIMEOUT = 120  # seconds to wait for browser callback
 
 
 # ── Token cache ──────────────────────────────────────────────────────────────
 
 def _cache_path() -> Path:
-    return Path.home() / ".devops-keyring" / "token-cache.json"
+    return Path.home() / ".ado-keyring" / "token-cache.json"
 
 
 def _load_cache() -> Optional[Dict[str, Any]]:
@@ -44,20 +46,30 @@ def _load_cache() -> Optional[Dict[str, Any]]:
 
 def _save_cache(cache: Dict[str, Any]) -> None:
     path = _cache_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(cache, indent=2))
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as f:
+        json.dump(cache, f, indent=2)
 
 
 # ── URL helpers ──────────────────────────────────────────────────────────────
 
+_DEVOPS_HOSTS = (
+    "visualstudio.com",
+    "dev.azure.com",
+    "pkgs.codedev.ms",
+    "pkgs.vsts.me",
+)
+
+
 def _is_devops_url(url: str) -> bool:
-    return "visualstudio.com" in url or "dev.azure.com" in url
+    return any(h in url for h in _DEVOPS_HOSTS)
 
 
 def _extract_org(service_url: str) -> Optional[str]:
     parsed = urlparse(service_url)
     host = parsed.hostname or ""
-    if "pkgs.visualstudio.com" in host or ".visualstudio.com" in host:
+    if host.endswith("visualstudio.com") or host.endswith("vsts.me") or host.endswith("codedev.ms"):
         return host.split(".")[0]
     elif "dev.azure.com" in host:
         parts = parsed.path.strip("/").split("/")
@@ -179,7 +191,12 @@ def _browser_auth() -> Dict[str, Any]:
     _open_browser(auth_url)
 
     # Wait for the OAuth callback
-    conn, _ = sock.accept()
+    sock.settimeout(_CALLBACK_TIMEOUT)
+    try:
+        conn, _ = sock.accept()
+    except socket.timeout:
+        sock.close()
+        raise RuntimeError(f"Timed out waiting for browser callback after {_CALLBACK_TIMEOUT}s")
     sock.close()
     data = conn.recv(8192).decode("utf-8", errors="replace")
 
@@ -217,7 +234,7 @@ def _exchange_code(code: str, redirect_uri: str, verifier: str) -> Dict[str, Any
         "code": code,
         "redirect_uri": redirect_uri,
         "code_verifier": verifier,
-    })
+    }, timeout=_HTTP_TIMEOUT)
     resp.raise_for_status()
     return resp.json()
 
@@ -230,7 +247,7 @@ def _refresh_access_token(refresh_token: str) -> Dict[str, Any]:
         "grant_type": "refresh_token",
         "refresh_token": refresh_token,
         "scope": _SCOPE,
-    })
+    }, timeout=_HTTP_TIMEOUT)
     resp.raise_for_status()
     return resp.json()
 
@@ -243,6 +260,7 @@ def _get_session_token(access_token: str, org: str) -> str:
         url,
         headers={"Authorization": f"Bearer {access_token}"},
         json={"scope": "vso.packaging", "targetAccounts": []},
+        timeout=_HTTP_TIMEOUT,
     )
     resp.raise_for_status()
     return resp.json()["token"]
@@ -332,8 +350,11 @@ class DevOpsKeyring(keyring.backend.KeyringBackend):
         return None
 
     def set_password(self, service: str, username: str, password: str) -> None:
-        raise NotImplementedError("devops-keyring is read-only")
+        raise NotImplementedError("ado-keyring is read-only")
 
     def delete_password(self, service: str, username: str) -> None:
-        raise NotImplementedError("devops-keyring is read-only")
+        path = _cache_path()
+        if path.exists():
+            path.unlink()
+            print(f"{_LOG_PREFIX} Token cache cleared", file=sys.stderr)
 

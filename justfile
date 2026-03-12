@@ -4,7 +4,7 @@ build:
 
 # Install into the system keyring tool environment
 install: build
-    uv tool install --force keyring --with artifacts-keyring --with dist/devops_keyring-0.1.0-py3-none-any.whl
+    uv tool install --force keyring --with artifacts-keyring --with dist/ado_keyring-0.1.0-py3-none-any.whl
 
 # Verify the backend is registered
 check:
