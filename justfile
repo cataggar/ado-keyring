@@ -4,7 +4,7 @@ build:
 
 # Install into the system keyring tool environment
 install: build
-    uv tool install --force keyring --with artifacts-keyring --with dist/ado_keyring-0.1.0-py3-none-any.whl
+    uv tool install --force keyring --with dist/ado_keyring-0.1.0-py3-none-any.whl
 
 # Verify the backend is registered
 check:
@@ -13,9 +13,9 @@ check:
 # Build, install, and verify
 all: install check
 
-# Test authentication against a DevOps feed
-test-auth:
-    keyring get https://msazure.pkgs.visualstudio.com VssSessionToken
+# Run tests
+test:
+    uv run pytest tests/ -v
 
 # Clean build artifacts
 clean:

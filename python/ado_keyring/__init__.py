@@ -22,6 +22,7 @@ import requests
 
 # Azure CLI public client
 _CLIENT_ID = "04b07795-8ddb-461a-bbee-02f9e1bf7b46"
+# Azure DevOps resource ID in Microsoft Entra ID, requesting default permissions and a refresh token
 _SCOPE = "499b84ac-1321-427f-aa17-267ca6975798/.default offline_access"
 _AUTH_URL = "https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize"
 _TOKEN_URL = "https://login.microsoftonline.com/organizations/oauth2/v2.0/token"
@@ -330,7 +331,7 @@ def _authenticate(service_url: str) -> Optional[Tuple[str, str]]:
 
 # ── Keyring backend ─────────────────────────────────────────────────────────
 
-class DevOpsKeyring(keyring.backend.KeyringBackend):
+class AdoKeyring(keyring.backend.KeyringBackend):
     """Authenticates to Azure DevOps package feeds via browser OAuth2 + PKCE.
 
     Works on WSL, Linux, and macOS. Tokens are cached to avoid repeated prompts.
