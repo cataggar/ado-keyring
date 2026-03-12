@@ -102,7 +102,6 @@ def _open_browser(url: str) -> None:
 
     if _is_wsl():
         attempts = [
-            ("wslview", [url]),
             (
                 "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe",
                 ["-NoProfile", "-Command", f"Start-Process '{url}'"],
