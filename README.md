@@ -29,7 +29,7 @@ just install
 
 ```sh
 tdnf install -y python3 python3-pip
-python3 -m pip install
+python3 -m pip install uv
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
 uv tool install rust-just
 just install
