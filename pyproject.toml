@@ -5,6 +5,8 @@ build-backend = "hatchling.build"
 [project]
 name = "ado-keyring"
 dynamic = ["version"]
+description = "A keyring backend that authenticates to Azure DevOps package feeds using browser-based OAuth2 with PKCE."
+readme = "README.md"
 license = "MIT"
 requires-python = ">=3.9"
 dependencies = ["keyring>=23.0", "requests>=2.28"]
