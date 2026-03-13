@@ -1,8 +1,14 @@
 # ado-keyring
 
-A [keyring](https://pypi.org/project/keyring/) backend that authenticates to Azure DevOps package feeds using browser-based OAuth2 with PKCE.
+A [keyring](https://pypi.org/project/keyring/) backend in pure python that authenticates to Azure DevOps package feeds using browser-based OAuth2 with PKCE.
 
-Built for environments where the .NET credential provider doesn't work — particularly **WSL**.
+Once installed, keyring automatically discovers `ado-keyring` as a backend. Any tool that uses keyring, such as [`uv`](https://docs.astral.sh/uv/) for [alternative indexes](https://docs.astral.sh/uv/guides/integration/alternative-indexes/), will trigger browser auth when accessing Azure DevOps feeds.
+
+## Install from PyPi
+
+```sh
+uv tool install keyring --with ado-keyring
+```
 
 ## Features
 
@@ -10,32 +16,24 @@ Built for environments where the .NET credential provider doesn't work — parti
 - **Persistent token cache** — avoids repeated browser prompts (`~/.ado-keyring/`)
 - **Automatic token refresh** — uses refresh tokens to silently renew access
 - **Per-org session tokens** — supports multiple Azure DevOps organizations
-- **WSL-aware** — opens the Windows browser from WSL via PowerShell or `cmd.exe`
+- **WSL-aware** — opens the Windows browser from WSL via `cmd.exe`
 - **No .NET dependency** — pure Python, unlike [`artifacts-keyring`](https://github.com/microsoft/artifacts-keyring)
 
-## Supported Hosts
-
-- `*.visualstudio.com`
-- `dev.azure.com`
-- `pkgs.codedev.ms`
-- `pkgs.vsts.me`
-
-## Install
+## Install from source
 
 ```sh
-uv tool install keyring --with ado-keyring
+just install
 ```
 
-Or from a local build:
+## Install on WSL from source
 
 ```sh
-uv build
-uv tool install keyring --with dist/ado_keyring-0.1.0-py3-none-any.whl
+tdnf install -y python3 python3-pip
+python3 -m pip install
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
+uv tool install rust-just
+just install
 ```
-
-## Usage
-
-Once installed, keyring automatically discovers `ado-keyring` as a backend. Any tool that uses keyring, such as [`uv`](https://docs.astral.sh/uv/) for [alternative indexes](https://docs.astral.sh/uv/guides/integration/alternative-indexes/), will trigger browser auth when accessing Azure DevOps feeds.
 
 ## How It Works
 
