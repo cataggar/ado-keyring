@@ -5,11 +5,18 @@ build-backend = "hatchling.build"
 [project]
 name = "ado-keyring"
 dynamic = ["version"]
-description = "A keyring backend that authenticates to Azure DevOps package feeds using browser-based OAuth2 with PKCE."
+description = "DEPRECATED: Use 'ghr install cataggar/keyring' (https://github.com/cataggar/keyring) instead (https://cataggar.github.io/ghr/)"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 7 - Inactive",
+]
 dependencies = ["keyring>=23.0", "requests>=2.28"]
+
+[project.urls]
+Homepage = "https://github.com/cataggar/keyring"
+Repository = "https://github.com/cataggar/ado-keyring"
 
 [project.entry-points."keyring.backends"]
 ado-keyring = "ado_keyring:AdoKeyring"
